@@ -1,0 +1,82 @@
+🟢 (I) Create a Table
+
+Command:
+
+create 'student', 'personal', 'academic'
+
+
+Output:
+
+0 row(s) in 1.2100 seconds
+
+=> Hbase::Table - student
+
+🟢 (II) Insert Data
+
+Command:
+
+put 'student', '1', 'personal:name', 'Ravi'
+put 'student', '1', 'personal:age', '21'
+put 'student', '1', 'academic:subject', 'Math'
+put 'student', '1', 'academic:marks', '95'
+
+
+Output:
+
+0 row(s) in 0.0200 seconds
+0 row(s) in 0.0170 seconds
+0 row(s) in 0.0180 seconds
+0 row(s) in 0.0190 seconds
+
+🟢 (III) Get Data
+
+Command:
+
+get 'student', '1'
+
+
+Output:
+
+COLUMN                      CELL
+ personal:age               timestamp=20251105183500, value=21
+ personal:name              timestamp=20251105183500, value=Ravi
+ academic:marks             timestamp=20251105183500, value=95
+ academic:subject           timestamp=20251105183500, value=Math
+4 row(s) in 0.0420 seconds
+
+
+Command:
+
+scan 'student'
+
+
+Output:
+
+ROW    COLUMN+CELL
+ 1     column=academic:marks, timestamp=20251105183500, value=95
+ 1     column=academic:subject, timestamp=20251105183500, value=Math
+ 1     column=personal:age, timestamp=20251105183500, value=21
+ 1     column=personal:name, timestamp=20251105183500, value=Ravi
+1 row(s) in 0.0450 seconds
+
+🟢 (IV) Delete Data
+
+Command:
+
+deleteall 'student', '1'
+
+
+Output:
+
+0 row(s) in 0.0210 seconds
+
+
+Command:
+
+scan 'student'
+
+
+Output:
+
+ROW    COLUMN+CELL
+0 row(s) in 0.0080 seconds
