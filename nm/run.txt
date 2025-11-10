@@ -1,0 +1,97 @@
+Project Folder Structure
+
+When you finish setup, your folder should look like this:
+
+iot-frontend/
+├── package.json
+├── vite.config.js
+├── index.html
+├── src/
+│   ├── App.jsx
+│   ├── main.jsx
+│   └── components/
+│       └── DeviceChart.jsx
+└── node_modules/
+
+🧩 1. Create the Project
+
+Open Command Prompt / PowerShell / VS Code Terminal and run:
+
+mkdir iot-frontend
+cd iot-frontend
+npm create vite@latest .
+
+
+When asked:
+
+✔ Project name: … iot-frontend
+✔ Select a framework: › React
+✔ Select a variant: › JavaScript
+
+
+Then install dependencies:
+
+npm install
+npm install axios socket.io-client chart.js react-chartjs-2
+
+📄 2. File Locations and Contents
+🔹 src/App.jsx
+
+Copy the full App.jsx code I shared above
+➡️ Location:
+iot-frontend/src/App.jsx
+
+🔹 src/components/DeviceChart.jsx
+
+Create the folder and file manually:
+
+iot-frontend/src/components/DeviceChart.jsx
+
+
+Paste the DeviceChart.jsx code I gave earlier.
+
+🔹 src/main.jsx
+
+Replace its contents with:
+
+import React from "react";
+import ReactDOM from "react-dom/client";
+import App from "./App";
+import "./index.css";
+
+ReactDOM.createRoot(document.getElementById("root")).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);
+
+▶️ 3. Run the Frontend
+
+In the terminal (inside iot-frontend):
+
+npm run dev
+
+
+You’ll see something like:
+
+VITE v5.x.x  ready in 400ms
+
+➜  Local:   http://localhost:5173/
+
+
+Open that URL in your browser.
+
+🔌 4. Backend API (for data)
+
+Your backend (Node.js REST API + Socket.io) must run at:
+
+http://localhost:3000
+
+
+The frontend fetches data from:
+
+http://localhost:3000/api/v1/devices
+http://localhost:3000/api/v1/data
+
+
+Make sure your backend and frontend both run locally.

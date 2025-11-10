@@ -1,0 +1,202 @@
+1. Folder structure
+frontend/
+ ├─ src/
+ │   ├─ App.jsx
+ │   ├─ index.jsx
+ │   └─ components/
+ │        └─ DeviceChart.jsx
+ ├─ package.json
+ ├─ vite.config.js
+ └─ index.html
+
+⚙️ 2. Setup (commands)
+# Create React app using Vite
+npm create vite@latest frontend -- --template react
+cd frontend
+
+# Install dependencies
+npm i axios socket.io-client chart.js react-chartjs-2
+
+
+Then replace the files below 👇
+
+🧠 3. src/App.jsx
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import io from "socket.io-client";
+import DeviceChart from "./components/DeviceChart";
+
+const API_BASE = "http://localhost:3000/api/v1";
+const SOCKET_URL = "http://localhost:3000/realtime";
+
+export default function App() {
+  const [devices, setDevices] = useState([]);
+  const [selected, setSelected] = useState("");
+  const [readings, setReadings] = useState([]);
+
+  useEffect(() => {
+    // Load available devices from backend
+    axios.get(`${API_BASE}/devices`)
+      .then((res) => {
+        setDevices(res.data.map(d => d.deviceId || d.last.deviceId));
+      })
+      .catch(console.error);
+  }, []);
+
+  useEffect(() => {
+    if (!selected) return;
+    // Fetch last 100 readings for selected device
+    axios.get(`${API_BASE}/devices/${selected}/history?limit=100`)
+      .then((res) => setReadings(res.data))
+      .catch(console.error);
+
+    // Connect to realtime updates
+    const socket = io(SOCKET_URL);
+    socket.on("connect", () => console.log("Connected to realtime server"));
+    socket.on("reading", (data) => {
+      if (data.deviceId === selected) {
+        setReadings(prev => [...prev.slice(-99), data]); // keep last 100
+      }
+    });
+    return () => socket.disconnect();
+  }, [selected]);
+
+  return (
+    <div className="p-6 font-sans text-gray-800">
+      <h1 className="text-2xl font-bold mb-4">🌐 IoT Sensor Dashboard</h1>
+
+      <div className="mb-4">
+        <label className="mr-2 font-medium">Select Device:</label>
+        <select
+          className="border rounded px-2 py-1"
+          onChange={(e) => setSelected(e.target.value)}
+          value={selected}
+        >
+          <option value="">-- Choose --</option>
+          {devices.map((d) => (
+            <option key={d} value={d}>{d}</option>
+          ))}
+        </select>
+      </div>
+
+      {selected ? (
+        <DeviceChart deviceId={selected} readings={readings} />
+      ) : (
+        <p className="text-gray-600">Select a device to view live data...</p>
+      )}
+    </div>
+  );
+}
+
+📈 4. src/components/DeviceChart.jsx
+import React from "react";
+import { Line } from "react-chartjs-2";
+import { Chart, LineElement, PointElement, LinearScale, TimeScale, Title, Tooltip, Legend } from "chart.js";
+import 'chartjs-adapter-date-fns';
+
+Chart.register(LineElement, PointElement, LinearScale, TimeScale, Title, Tooltip, Legend);
+
+export default function DeviceChart({ deviceId, readings }) {
+  const data = {
+    labels: readings.map((r) => new Date(r.timestamp)),
+    datasets: [
+      {
+        label: `${deviceId} (${readings[0]?.type || "sensor"})`,
+        data: readings.map((r) => r.value),
+        borderColor: "rgb(75,192,192)",
+        backgroundColor: "rgba(75,192,192,0.2)",
+        tension: 0.2,
+      },
+    ],
+  };
+
+  const options = {
+    responsive: true,
+    scales: {
+      x: { type: "time", time: { unit: "minute" }, title: { display: true, text: "Time" } },
+      y: { title: { display: true, text: "Value" } },
+    },
+    plugins: {
+      legend: { position: "top" },
+      title: { display: true, text: "Live Sensor Data" },
+    },
+  };
+
+  return (
+    <div className="w-full max-w-4xl bg-white shadow rounded p-4">
+      <Line data={data} options={options} />
+    </div>
+  );
+}
+
+🪩 5. src/index.jsx
+import React from "react";
+import ReactDOM from "react-dom/client";
+import App from "./App";
+import "./index.css";
+
+ReactDOM.createRoot(document.getElementById("root")).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);
+
+🧰 6. index.html
+
+Make sure <div id="root"></div> is present:
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>IoT Sensor Dashboard</title>
+  </head>
+  <body class="bg-gray-50">
+    <div id="root"></div>
+    <script type="module" src="/src/index.jsx"></script>
+  </body>
+</html>
+
+🎨 7. Styling (optional)
+
+You can use Tailwind CSS or basic CSS.
+To quickly use Tailwind:
+
+npm i -D tailwindcss postcss autoprefixer
+npx tailwindcss init -p
+
+
+Then edit tailwind.config.js:
+
+export default {
+  content: ["./index.html", "./src/**/*.{js,jsx}"],
+  theme: { extend: {} },
+  plugins: [],
+};
+
+
+Edit src/index.css:
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+🚀 8. Run frontend
+npm run dev
+
+
+Frontend runs at http://localhost:5173
+
+It expects your backend to be running at http://localhost:3000.
+
+🧪 9. Test with mock data
+
+Run (in a new terminal):
+
+curl -X POST http://localhost:3000/api/v1/data \
+  -H "Content-Type: application/json" \
+  -d '{"deviceId":"sensor-123","type":"temperature","value":25.8,"unit":"C","timestamp":"'"$(date -u +"%Y-%m-%dT%H:%M:%SZ")"'"}'
+
+
+The graph on your dashboard should update instantly 🎉
